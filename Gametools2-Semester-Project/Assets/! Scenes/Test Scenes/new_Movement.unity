@@ -545,7 +545,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 807316085}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d24d5c261e7d9a6c1b522d1656351ac7, type: 3}
   m_Name: 
@@ -604,7 +604,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 807316085}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4da05ed3df9aa414d9cabd6ea22b8dea, type: 3}
   m_Name: 
@@ -1088,8 +1088,9 @@ GameObject:
   - component: {fileID: 1579441297}
   - component: {fileID: 1579441300}
   - component: {fileID: 1579441299}
-  - component: {fileID: 1579441302}
-  - component: {fileID: 1579441301}
+  - component: {fileID: 1579441305}
+  - component: {fileID: 1579441304}
+  - component: {fileID: 1579441303}
   m_Layer: 0
   m_Name: Movement Controller
   m_TagString: Untagged
@@ -1165,7 +1166,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1579441301
+--- !u!114 &1579441303
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1174,31 +1175,49 @@ MonoBehaviour:
   m_GameObject: {fileID: 1579441296}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: df0413d28e88f22b998d19497e82c736, type: 3}
+  m_Script: {fileID: 11500000, guid: fa87d89db16ecdbb284b198c7b34e6ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  whatIsWall:
+  orientation: {fileID: 1284568490}
+  player_Object: {fileID: 1579441297}
+  max_Slide_Time: 2
+  slide_Force: 200
+  slide_Y_Scale: 0.5
+  slide_Key: 306
+--- !u!114 &1579441304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579441296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abaff9cf0a9ef9f819efa440ee46b556, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wall_Layer:
     serializedVersion: 2
     m_Bits: 128
-  whatIsGround:
+  ground_Layer:
     serializedVersion: 2
     m_Bits: 64
-  wallRunForce: 200
-  wallJumpUpForce: 7
-  wallJumpSideForce: 14
-  wallClimbSpeed: 1.5
-  maxWallRunTime: 4
-  jumpKey: 32
-  upwardsRunKey: 304
-  downwardsRunKey: 306
-  wallCheckDistance: 0.7
-  minJumpHeight: 1
-  exitWallTime: 0.2
-  useGravity: 1
-  gravityCounterForce: 20
   orientation: {fileID: 1284568490}
   cam: {fileID: 807316091}
---- !u!114 &1579441302
+  jump_Key: 32
+  upwards_Run_Key: 304
+  downwards_Run_Key: 306
+  wall_Run_Force: 200
+  wall_Jump_Upward_Force: 7
+  wall_Jump_Sideway_Force: 14
+  wall_Climb_Speed: 1.5
+  max_Wall_Run_Time: 4
+  exit_Wall_Time: 0.2
+  wall_Check_Distance: 0.7
+  min_Jump_Height: 1
+  use_Gravity: 1
+  gravity_Counter_Force: 20
+--- !u!114 &1579441305
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1207,36 +1226,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 1579441296}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 61076d95b2e72deff8e45fa30a5db3ee, type: 3}
+  m_Script: {fileID: 11500000, guid: e9fc392c5981f4054b23f3866f4d3911, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 7
-  sprintSpeed: 10
-  slideSpeed: 30
-  wallrunSpeed: 8.5
-  speedIncreaseMultiplier: 1.5
-  slopeIncreaseMultiplier: 2.5
-  groundDrag: 4
-  jumpForce: 12
-  jumpCooldown: 0.25
-  airMultiplier: 0.4
-  crouchSpeed: 3.5
-  crouchYScale: 0.5
-  jumpKey: 32
-  sprintKey: 304
-  crouchKey: 306
-  playerHeight: 2
-  whatIsGround:
+  orientation: {fileID: 1284568490}
+  jump_Key: 32
+  sprint_Key: 304
+  crouch_Key: 306
+  walk_Speed: 7
+  sprint_Speed: 10
+  slide_Speed: 30
+  wall_Run_Speed: 8.5
+  speed_Increase_Multiplier: 1.5
+  ground_Drag: 4
+  jump_Force: 12
+  jump_Cooldown: 0.25
+  air_Multiplier: 0.4
+  crouch_Move_Speed: 2.5
+  crouch_Y_Scale: 0.5
+  player_Height: 2
+  ground_Layer:
     serializedVersion: 2
     m_Bits: 64
-  maxSlopeAngle: 40
-  orientation: {fileID: 1284568490}
-  state: 0
-  sliding: 0
-  crouching: 0
-  wallrunning: 0
-  text_speed: {fileID: 0}
-  text_mode: {fileID: 0}
+  max_Slope_Angle: 40
+  slope_Increase_Multiplier: 2.5
+  current_State: 0
+  can_Jump: 0
+  is_Grounded: 0
+  is_Crouching: 0
+  is_Sliding: 0
+  is_Wall_Running: 0
 --- !u!1 &1806468157
 GameObject:
   m_ObjectHideFlags: 0

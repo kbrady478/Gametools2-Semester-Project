@@ -1,4 +1,4 @@
-// Tutorial used for patrolling state: https://www.youtube.com/watch?v=vS6lyX2QidE&t=238s
+// Tutorial used for patrolling current_State: https://www.youtube.com/watch?v=vS6lyX2QidE&t=238s
 
 
 using UnityEngine;
@@ -246,7 +246,7 @@ public class Enemy_Movement : MonoBehaviour
         
         float dist_To_Last_Known_Location = Vector3.Distance(transform.position, enemy_FOV_Script.last_Player_Location);
         
-        //Debug.Log("enter chase state");
+        //Debug.Log("enter chase current_State");
         
         if (dist_To_Last_Known_Location <= 3)
         {
@@ -323,7 +323,7 @@ public class Enemy_Movement : MonoBehaviour
         
         enemy_View_Rotator.transform.rotation = gameObject.transform.rotation;
         
-        //Debug.Log($"Changing state: {current_State}");
+        //Debug.Log($"Changing current_State: {current_State}");
         
         if (new_State == 1)
             current_State = State.Patrol;

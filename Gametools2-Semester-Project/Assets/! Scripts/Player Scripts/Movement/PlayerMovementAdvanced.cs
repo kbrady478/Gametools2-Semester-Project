@@ -248,7 +248,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
         else if (grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
 
-        // in air
+        // in in_Air
         else if (!grounded)
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
 
@@ -265,7 +265,7 @@ public class PlayerMovementAdvanced : MonoBehaviour
                 rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
         }
 
-        // limiting speed on ground or in air
+        // limiting speed on ground or in in_Air
         else
         {
             Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);

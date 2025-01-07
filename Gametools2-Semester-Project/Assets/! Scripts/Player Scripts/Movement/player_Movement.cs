@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -7,178 +8,275 @@ public class player_Movement : MonoBehaviour
 {
     [Header("General")]
     [SerializeField] private Transform orientation;
-    private Rigidbody rb;
-    private Vector3 move_Direction;
+    private Rigidbody rb;    
     private float horizontal_Input;
     private float vertical_Input;
     
+    [Header("Keybinds")]
+    [SerializeField] private KeyCode jump_Key = KeyCode.Space;
+    [SerializeField] private KeyCode sprint_Key = KeyCode.LeftShift;
+    [SerializeField] private KeyCode crouch_Key = KeyCode.LeftControl;    
+    
     [Header("Movement")]
+    private Vector3 moveDirection;
     private float move_Speed;
+    private float target_Move_Speed;
+    private float last_Target_Move_Speed;
     [SerializeField] private float walk_Speed;
     [SerializeField] private float sprint_Speed;
+    [SerializeField] private float slide_Speed;
     [SerializeField] private float wall_Run_Speed;
-    [HideInInspector] public bool is_Wall_Running;
-    
-    [FormerlySerializedAs("terrain_Layer")]
-    [Header("Grounded")] 
-    [SerializeField] private LayerMask ground_Layer;
-    [SerializeField] private float player_Height;
-    [SerializeField] private float player_Drag;
-    [SerializeField] private bool is_Grounded;
-    
+    [SerializeField] private float speed_Increase_Multiplier;
+    [SerializeField] private float ground_Drag;
+
     [Header("Jumping")]
     [SerializeField] private float jump_Force;
     [SerializeField] private float jump_Cooldown;
     [SerializeField] private float air_Multiplier;
-    [SerializeField] private bool can_Jump = true;
-
-    [Header("Crouching")] 
-    [SerializeField] private float crouch_Speed;
-    [SerializeField] private float crouch_Y_Scale;
-    private float start_crouch_Y_Scale;
-
-    /*
-    [Header("Slope Handling")] 
-    [SerializeField] private float max_Slope_Angle;
-    private RaycastHit slope_Hit;
-    */
     
-    [Header("Current State")]
-    public Movement_State current_State;
+    [Header("Crouching")]
+    [SerializeField] private float crouch_Move_Speed;
+    [SerializeField] private float crouch_Y_Scale;
+    private float start_Y_Scale;
+
+    [Header("Ground Check")]
+    [SerializeField] private float player_Height;
+    [SerializeField] private LayerMask ground_Layer;
+
+    [Header("Slope Handling")]
+    [SerializeField] private float max_Slope_Angle;
+    [SerializeField] private float slope_Increase_Multiplier;
+    private RaycastHit slope_Hit;
+    private bool exiting_Slope;
+    
     
     public enum Movement_State
     {
         walking,
         sprinting,
-        wall_Running,
+        wallrunning,
         crouching,
+        sliding,
         in_Air
-    }// end enum Movement_State
+    }
+
+    [Header("State Bools - Do not change")]
+    public Movement_State current_State;
+    [SerializeField] private bool can_Jump;
+    public bool is_Grounded;
+    public bool is_Crouching;
+    public bool is_Sliding;
+    public bool is_Wall_Running;
     
-    #region --- Base Functions ---
+    
+    #region --- Unity Updates ---
     
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-        
-        start_crouch_Y_Scale = transform.localScale.y;
-    }// end Start()
+
+        can_Jump = true;
+
+        start_Y_Scale = transform.localScale.y;
+    }
 
     private void Update()
     {
-        // Ground check
-        is_Grounded = Physics.Raycast(transform.position, Vector3.down, (player_Height * 0.5f) + 0.2f, ground_Layer);
-        
+        // ground check
+        is_Grounded = Physics.Raycast(transform.position, Vector3.down, player_Height * 0.5f + 0.2f, ground_Layer);
+
         Player_Input();
+        Speed_Control();
         State_Handler();
-        Speed_Limiter();
-        
-        // Change drag
+
+        // handle drag
         if (is_Grounded)
-            rb.linearDamping = player_Drag;
+            rb.linearDamping = ground_Drag;
         else
             rb.linearDamping = 0;
-    }// end Update()
+    }
 
     private void FixedUpdate()
     {
         Move_Player();
-    }// end FixedUpdate()
+    }
 
     #endregion
-
-    #region --- General Functions ---
+    
+    #region --- General Functionality ---
     
     private void Player_Input()
     {
-        horizontal_Input = Input.GetAxis("Horizontal");
-        vertical_Input = Input.GetAxis("Vertical");
+        horizontal_Input = Input.GetAxisRaw("Horizontal");
+        vertical_Input = Input.GetAxisRaw("Vertical");
 
-        // Jumping
-        if (Input.GetKeyDown(KeyCode.Space) && can_Jump && is_Grounded)
+        // when to jump
+        if (Input.GetKey(jump_Key) && can_Jump && is_Grounded)
         {
             can_Jump = false;
+
             Jump();
-            Invoke("Reset_Jump", jump_Cooldown);
+
+            Invoke(nameof(Reset_Jump), jump_Cooldown);
         }
-        
-        // Crouching
-        if (Input.GetKeyDown(KeyCode.LeftControl))
+
+        // start crouch
+        if (Input.GetKeyDown(crouch_Key) && horizontal_Input == 0 && vertical_Input == 0)
         {
             transform.localScale = new Vector3(transform.localScale.x, crouch_Y_Scale, transform.localScale.z);
-            // Correct height to avoid floating
             rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+
+            is_Crouching = true;
         }
-        
-        if (Input.GetKeyUp(KeyCode.LeftControl))
-            transform.localScale = new Vector3(transform.localScale.x, start_crouch_Y_Scale, transform.localScale.z);
-        
-    }// end Player_Input()
+
+        // stop crouch
+        if (Input.GetKeyUp(crouch_Key))
+        {
+            transform.localScale = new Vector3(transform.localScale.x, start_Y_Scale, transform.localScale.z);
+
+            is_Crouching = false;
+        }
+    }
 
     private void State_Handler()
     {
-        // State = Wall running
+        // State - Wallrunning
         if (is_Wall_Running)
         {
-            current_State = Movement_State.wall_Running;
-            move_Speed = walk_Speed;
+            current_State = Movement_State.wallrunning;
+            target_Move_Speed = wall_Run_Speed;
         }
-            
-        // State = Crouching
-        else if (Input.GetKey(KeyCode.LeftControl))
+
+        // State - Sliding
+        else if (is_Sliding)
+        {
+            current_State = Movement_State.sliding;
+
+            // increase speed by one every second
+            if (On_Slope() && rb.linearVelocity.y < 0.1f)
+                target_Move_Speed = slide_Speed;
+
+            else
+                target_Move_Speed = sprint_Speed;
+        }
+
+        // State - Crouching
+        else if (is_Crouching)
         {
             current_State = Movement_State.crouching;
-            move_Speed = crouch_Speed;
+            target_Move_Speed = crouch_Move_Speed;
         }
-        
-        // State = Sprinting
-        else if (is_Grounded && Input.GetKey(KeyCode.LeftShift))
+
+        // State - Sprinting
+        else if (is_Grounded && Input.GetKey(sprint_Key))
         {
             current_State = Movement_State.sprinting;
-            move_Speed = sprint_Speed;
+            target_Move_Speed = sprint_Speed;
         }
-        
-        // State = Walking
+
+        // State - Walking
         else if (is_Grounded)
         {
             current_State = Movement_State.walking;
-            move_Speed = walk_Speed;
+            target_Move_Speed = walk_Speed;
         }
 
+        // State - Air
         else
+        {
             current_State = Movement_State.in_Air;
-        
-    }// end State_Handler()
-    
+        }
+
+        // Check if desired move speed has changed drastically
+        if (Mathf.Abs(target_Move_Speed - last_Target_Move_Speed) > 4f && move_Speed != 0)
+        {
+            StopAllCoroutines();
+            StartCoroutine(Lerp_Move_Speed());
+        }
+        else
+        {
+            move_Speed = target_Move_Speed;
+        }
+
+        last_Target_Move_Speed = target_Move_Speed;
+    }
+
+    private IEnumerator Lerp_Move_Speed()
+    {
+        // Smoothly transition movementSpeed to target value
+        float time = 0;
+        float difference = Mathf.Abs(target_Move_Speed - move_Speed);
+        float start_Value = move_Speed;
+
+        while (time < difference)
+        {
+            move_Speed = Mathf.Lerp(start_Value, target_Move_Speed, time / difference);
+
+            if (On_Slope())
+            {
+                float slope_Angle = Vector3.Angle(Vector3.up, slope_Hit.normal);
+                float slope_Angle_Increase = 1 + (slope_Angle / 90f);
+
+                time += Time.deltaTime * speed_Increase_Multiplier * slope_Increase_Multiplier * slope_Angle_Increase;
+            }
+            else
+                time += Time.deltaTime * speed_Increase_Multiplier;
+
+            yield return null;
+        }
+
+        move_Speed = target_Move_Speed;
+    }
+
     private void Move_Player()
     {
         // Calculate movement direction
-        move_Direction = orientation.forward * vertical_Input + orientation.right * horizontal_Input;
-       
-        /*
-        if (On_Slope())
-            rb.AddForce(Get_Slope_Move_Direction() * move_Speed * 20f, ForceMode.Force);
-        */
-            
-        if (is_Grounded)
-            rb.AddForce(move_Direction.normalized * move_Speed * 10f, ForceMode.Force);
-        else if (!is_Grounded)
-            rb.AddForce(move_Direction.normalized * move_Speed * air_Multiplier * 10f , ForceMode.Force);
-    }// end Move_Player()
+        moveDirection = orientation.forward * vertical_Input + orientation.right * horizontal_Input;
 
-    private void Speed_Limiter()
-    {
-        Vector3 flat_Velocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        
-        // Limit velocity when needed
-        if (flat_Velocity.magnitude > move_Speed)
+        // Movement on slope
+        if (On_Slope() && !exiting_Slope)
         {
-            Vector3 limited_Velocity = flat_Velocity.normalized * move_Speed;
-            rb.linearVelocity = new Vector3(limited_Velocity.x, rb.linearVelocity.y, limited_Velocity.z);
+            rb.AddForce(Get_Slope_Move_Direction(moveDirection) * move_Speed * 20f, ForceMode.Force);
+
+            if (rb.linearVelocity.y > 0)
+                rb.AddForce(Vector3.down * 80f, ForceMode.Force);
         }
-        
-    }// end Speed_Limiter()
+
+        // Movement on ground
+        else if (is_Grounded)
+            rb.AddForce(moveDirection.normalized * move_Speed * 10f, ForceMode.Force);
+
+        // Movement in air
+        else if (!is_Grounded)
+            rb.AddForce(moveDirection.normalized * move_Speed * 10f * air_Multiplier, ForceMode.Force);
+
+        // Turn gravity off while on slope
+        if(!is_Wall_Running) rb.useGravity = !On_Slope();
+    }
+
+    private void Speed_Control()
+    {
+        // Limits speed on slope
+        if (On_Slope() && !exiting_Slope)
+        {
+            if (rb.linearVelocity.magnitude > move_Speed)
+                rb.linearVelocity = rb.linearVelocity.normalized * move_Speed;
+        }
+
+        // Limits speed on ground or in air
+        else
+        {
+            Vector3 flat_Velocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+
+            // Limit velocity if needed
+            if (flat_Velocity.magnitude > move_Speed)
+            {
+                Vector3 limited_Velocity = flat_Velocity.normalized * move_Speed;
+                rb.linearVelocity = new Vector3(limited_Velocity.x, rb.linearVelocity.y, limited_Velocity.z);
+            }
+        }
+    }
 
     #endregion
     
@@ -186,41 +284,40 @@ public class player_Movement : MonoBehaviour
     
     private void Jump()
     {
-        // Reset Y velocity
+        exiting_Slope = true;
+
+        // reset y velocity
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-        
+
         rb.AddForce(transform.up * jump_Force, ForceMode.Impulse);
     }
-
     private void Reset_Jump()
     {
         can_Jump = true;
+        exiting_Slope = false;
     }
-    
+
     #endregion
-    
-/*    
     
     #region --- Slope Handling ---
     
-    private bool On_Slope()
+    public bool On_Slope()
     {
-        if (Physics.Raycast(transform.position, Vector3.down, out slope_Hit, (player_Height * 0.5f) + 0.3f, ground_Layer));
+        if (Physics.Raycast(transform.position, Vector3.down, out slope_Hit, player_Height * 0.5f + 0.3f))
         {
             float angle = Vector3.Angle(Vector3.up, slope_Hit.normal);
-            return angle > max_Slope_Angle && angle != 0;
+            return angle < max_Slope_Angle && angle != 0;
         }
-        
-        return false;
-    }// end On_Slop()
 
-    private Vector3 Get_Slope_Move_Direction()
+        return false;
+    }
+
+    public Vector3 Get_Slope_Move_Direction(Vector3 direction)
     {
-        return Vector3.ProjectOnPlane(move_Direction, slope_Hit.normal).normalized;
-    }// end Get_Slope_Move_Direction()
-    
+        return Vector3.ProjectOnPlane(direction, slope_Hit.normal).normalized;
+    }
+
     #endregion
     
-*/
-    
+
 }// end player_Movement

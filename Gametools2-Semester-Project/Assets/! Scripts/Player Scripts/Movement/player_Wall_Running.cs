@@ -3,25 +3,39 @@
 using System;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class player_Wall_Running : MonoBehaviour
 {
-    [Header("General")] 
-    [SerializeField] private Transform orientation;
+    [Header("General")]
     [SerializeField] private LayerMask wall_Layer;
     [SerializeField] private LayerMask ground_Layer;
-    private player_Movement movement_Script;
-    private Rigidbody rb;
+    [SerializeField] private Transform orientation;
+    private player_Movement player_Movement_Script;
+    private Rigidbody rb;  
+    private float horizontal_Input;
+    private float vertical_Input;    
     
-    [Header("Wall Running")] 
+    [Header("Keybinds")]
+    [SerializeField] private KeyCode jump_Key = KeyCode.Space;
+    [SerializeField] private KeyCode upwards_Run_Key = KeyCode.LeftShift;
+    [SerializeField] private KeyCode downwards_Run_Key = KeyCode.LeftControl;    
+    
+    [Header("Wallrunning")]
     [SerializeField] private float wall_Run_Force;
+    [SerializeField] private float wall_Jump_Upward_Force;
+    [SerializeField] private float wall_Jump_Sideway_Force;
+    [SerializeField] private float wall_Climb_Speed;
+    private bool upwards_Running;
+    private bool downwards_Running;
+    
     [SerializeField] private float max_Wall_Run_Time;
     private float wall_Run_Timer;
     
-    [Header("Input")]
-    private float horizontal_Input;
-    private float vertical_Input;
-
+    [SerializeField] private float exit_Wall_Time;
+    private bool exiting_Wall;
+    private float exit_Wall_Timer;
+    
     [Header("Detection")]
     [SerializeField] private float wall_Check_Distance;
     [SerializeField] private float min_Jump_Height;
@@ -29,84 +43,153 @@ public class player_Wall_Running : MonoBehaviour
     private RaycastHit right_Wall_Hit;
     private bool wall_On_Left;
     private bool wall_On_Right;
+    
+    [Header("Gravity")]
+    [SerializeField] private bool use_Gravity;
+    [SerializeField] private float gravity_Counter_Force;
 
-
+    
+    #region --- Unity Updates---
+    
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        movement_Script = GetComponent<player_Movement>();
-    }// end Start()
+        player_Movement_Script = GetComponent<player_Movement>();
+    }
 
     private void Update()
     {
         Check_For_Wall();
         State_Machine();
-    }// end Update()
+    }
 
     private void FixedUpdate()
     {
-        if (movement_Script.is_Wall_Running)
-            Wall_Run_Movement();
-    }// end FixedUpdate()
+        if (player_Movement_Script.is_Wall_Running)
+            Wall_Running_Movement();
+    }
 
-
+    #endregion
+    
     private void Check_For_Wall()
     {
-        wall_On_Left = Physics.Raycast(transform.position, -orientation.right, out left_Wall_Hit, wall_Check_Distance, wall_Layer);
         wall_On_Right = Physics.Raycast(transform.position, orientation.right, out right_Wall_Hit, wall_Check_Distance, wall_Layer);
-    }// end Check_For_Wall()
+        wall_On_Left = Physics.Raycast(transform.position, -orientation.right, out left_Wall_Hit, wall_Check_Distance, wall_Layer);
+    }
 
-    private bool Is_Grounded()
+    private bool Above_Ground()
     {
-        return Physics.Raycast(transform.position, Vector3.down, min_Jump_Height, ground_Layer);
-    }// end Is_Grounded()
+        return !Physics.Raycast(transform.position, Vector3.down, min_Jump_Height, ground_Layer);
+    }
 
     private void State_Machine()
     {
-        // Get inputs
-        horizontal_Input = Input.GetAxis("Horizontal");
-        vertical_Input = Input.GetAxis("Vertical");
-        
-        //  State 1 - Is Wall Running
-        if ((wall_On_Left || wall_On_Right) && vertical_Input > 0 && !Is_Grounded())
+        // Getting Inputs
+        horizontal_Input = Input.GetAxisRaw("Horizontal");
+        vertical_Input = Input.GetAxisRaw("Vertical");
+
+        upwards_Running = Input.GetKey(upwards_Run_Key);
+        downwards_Running = Input.GetKey(downwards_Run_Key);
+
+        // State - Wallrunning
+        if((wall_On_Left || wall_On_Right) && vertical_Input > 0 && Above_Ground() && !exiting_Wall)
         {
-            if (!movement_Script.is_Wall_Running)
+            if (!player_Movement_Script.is_Wall_Running)
                 Start_Wall_Run();
+
+            // Wallrun timer
+            if (wall_Run_Timer > 0)
+                wall_Run_Timer -= Time.deltaTime;
+
+            if(wall_Run_Timer <= 0 && player_Movement_Script.is_Wall_Running)
+            {
+                exiting_Wall = true;
+                exit_Wall_Timer = exit_Wall_Time;
+            }
+
+            // Wall jump
+            if (Input.GetKeyDown(jump_Key)) Wall_Jump();
         }
 
-        // State 3 - Not on Wall
+        // State - Exiting
+        else if (exiting_Wall)
+        {
+            if (player_Movement_Script.is_Wall_Running)
+                Stop_Wall_Run();
+
+            if (exit_Wall_Timer > 0)
+                exit_Wall_Timer -= Time.deltaTime;
+
+            if (exit_Wall_Timer <= 0)
+                exiting_Wall = false;
+        }
+
+        // State - None
         else
         {
-            if (movement_Script.is_Wall_Running)
+            if (player_Movement_Script.is_Wall_Running)
                 Stop_Wall_Run();
         }
-
-    }// end State_Machine()
-
+    }
 
     private void Start_Wall_Run()
     {
-        movement_Script.is_Wall_Running = true;
-    }// end Start_Wall_Run()
+        player_Movement_Script.is_Wall_Running = true;
 
-    private void Wall_Run_Movement()
-    {
-        rb.useGravity = false;
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+        wall_Run_Timer = max_Wall_Run_Time;
+
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         
+    }
+
+    private void Wall_Running_Movement()
+    {
+        rb.useGravity = use_Gravity;
+
         Vector3 wall_Normal = wall_On_Right ? right_Wall_Hit.normal : left_Wall_Hit.normal;
 
         Vector3 wall_Forward = Vector3.Cross(wall_Normal, transform.up);
 
+        if ((orientation.forward - wall_Forward).magnitude > (orientation.forward - -wall_Forward).magnitude)
+            wall_Forward = -wall_Forward;
+
+        // Forward force
         rb.AddForce(wall_Forward * wall_Run_Force, ForceMode.Force);
-    }// end Wall_Run_Movement()
+
+        // Upwards/downwards force
+        if (upwards_Running)
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, wall_Climb_Speed, rb.linearVelocity.z);
+        if (downwards_Running)
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, -wall_Climb_Speed, rb.linearVelocity.z);
+
+        // Push to wall force
+        if (!(wall_On_Left && horizontal_Input > 0) && !(wall_On_Right && horizontal_Input < 0))
+            rb.AddForce(-wall_Normal * 100, ForceMode.Force);
+
+        // Weaken gravity
+        if (use_Gravity)
+            rb.AddForce(transform.up * gravity_Counter_Force, ForceMode.Force);
+    }
 
     private void Stop_Wall_Run()
     {
-        rb.useGravity = true;
-        movement_Script.is_Wall_Running = false;
-    }// end Stop_Wall_Run()
-    
-    
+        player_Movement_Script.is_Wall_Running = false;
+        
+    }
+
+    private void Wall_Jump()
+    {
+        // enter exiting wall current_State
+        exiting_Wall = true;
+        exit_Wall_Timer = exit_Wall_Time;
+
+        Vector3 wall_Normal = wall_On_Right ? right_Wall_Hit.normal : left_Wall_Hit.normal;
+
+        Vector3 force_To_Apply = transform.up * wall_Jump_Upward_Force + wall_Normal * wall_Jump_Sideway_Force;
+
+        // reset y velocity and add force
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+        rb.AddForce(force_To_Apply, ForceMode.Impulse);
+    }
     
 }// end player_Wall_Running

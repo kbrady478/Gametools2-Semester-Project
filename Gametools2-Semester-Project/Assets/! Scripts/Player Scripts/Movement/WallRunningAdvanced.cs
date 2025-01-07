@@ -179,7 +179,7 @@ public class WallRunningAdvanced : MonoBehaviour
 
     private void WallJump()
     {
-        // enter exiting wall state
+        // enter exiting wall current_State
         exitingWall = true;
         exitWallTimer = exitWallTime;
 

@@ -68,7 +68,7 @@ public class Enemy_FOV : MonoBehaviour
                     player_Visible = true;
                     // For use in Enemy_Movement Chase_Player
                     last_Player_Location = player_Ref.transform.position;
-                    // Change state in Enemy_Movement to Chase_Player
+                    // Change current_State in Enemy_Movement to Chase_Player
                     enemy_Movement_Script.Change_State(4);
                 }
                 else
