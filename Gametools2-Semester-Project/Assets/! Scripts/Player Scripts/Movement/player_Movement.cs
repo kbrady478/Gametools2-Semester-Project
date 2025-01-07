@@ -98,6 +98,7 @@ public class player_Movement : MonoBehaviour
         if (is_Grounded)
         {
             can_Air_Jump = false;
+            has_Air_Jumped = false;
             rb.linearDamping = ground_Drag;
         }
         
@@ -125,6 +126,11 @@ public class player_Movement : MonoBehaviour
         horizontal_Input = Input.GetAxisRaw("Horizontal");
         vertical_Input = Input.GetAxisRaw("Vertical");
 
+        if (Input.GetKey(sprint_Key))
+            move_Speed = sprint_Speed;
+        else if (Input.GetKeyUp(sprint_Key))
+            move_Speed = walk_Speed;
+        
         // Regular Jump
         if (Input.GetKeyDown(jump_Key) && can_Jump && is_Grounded)
         {
