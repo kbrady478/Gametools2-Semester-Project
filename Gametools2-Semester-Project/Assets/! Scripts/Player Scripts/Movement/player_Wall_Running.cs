@@ -11,6 +11,7 @@ public class player_Wall_Running : MonoBehaviour
     [SerializeField] private LayerMask wall_Layer;
     [SerializeField] private LayerMask ground_Layer;
     [SerializeField] private Transform orientation;
+    [SerializeField] private Camera camera_Component;
     private player_Movement player_Movement_Script;
     private Rigidbody rb;  
     private float horizontal_Input;
@@ -36,6 +37,11 @@ public class player_Wall_Running : MonoBehaviour
     private bool exiting_Wall;
     private float exit_Wall_Timer;
     
+    [Header("Camera Tilt")]
+    [SerializeField] private first_Person_Cam camera_Script;
+    [SerializeField] private float camera_Tilt_Speed;
+    [SerializeField] private float camera_Tilt_Duration;
+    
     [Header("Detection")]
     [SerializeField] private float wall_Check_Distance;
     [SerializeField] private float min_Jump_Height;
@@ -55,7 +61,7 @@ public class player_Wall_Running : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         player_Movement_Script = GetComponent<player_Movement>();
-        
+
     }// end Start()
 
     private void Update()
@@ -134,11 +140,15 @@ public class player_Wall_Running : MonoBehaviour
         
         player_Movement_Script.has_Air_Jumped = false;
         player_Movement_Script.can_Air_Jump = true;
+
+        camera_Component.fieldOfView = 65;
         
     }// end Start_Wall_Run()
 
     private void Wall_Running_Movement()
     {
+        Handle_Camera_Tilt();
+        
         rb.useGravity = use_Gravity;
         Vector3 wall_Normal = wall_On_Right ? right_Wall_Hit.normal : left_Wall_Hit.normal;
         Vector3 wall_Forward = Vector3.Cross(wall_Normal, transform.up);
@@ -167,7 +177,10 @@ public class player_Wall_Running : MonoBehaviour
     private void Stop_Wall_Run()
     {
         player_Movement_Script.is_Wall_Running = false;
-        
+
+        camera_Component.fieldOfView = 60;
+
+        camera_Script.z_Rotation = 0;
     }// end Stop_Wall_Run()
 
     private void Wall_Jump()
@@ -185,7 +198,19 @@ public class player_Wall_Running : MonoBehaviour
         rb.AddForce(force_To_Apply, ForceMode.Impulse);
         
     }// end Wall_Jump()
-    
+
+    private void Handle_Camera_Tilt()
+    {
+        if (wall_On_Left == true)
+        {
+            camera_Script.z_Rotation = -15;
+        }
+        
+        if (wall_On_Right == true)
+        {
+            camera_Script.z_Rotation = 15f;
+        }
+    }
     
     #region --- Detections ---
     

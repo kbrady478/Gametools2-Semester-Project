@@ -370,11 +370,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   orientation: {fileID: 6809738768368390287}
+  camera: {fileID: 492565310111534717}
   jump_Key: 32
   sprint_Key: 304
   crouch_Key: 306
   walk_Speed: 7
-  sprint_Speed: 10
+  sprint_Speed: 15
   slide_Speed: 30
   wall_Run_Speed: 8.5
   speed_Increase_Multiplier: 1.5
@@ -392,6 +393,8 @@ MonoBehaviour:
   slope_Increase_Multiplier: 2.5
   current_State: 0
   can_Jump: 0
+  can_Air_Jump: 0
+  has_Air_Jumped: 0
   is_Grounded: 0
   is_Crouching: 0
   is_Sliding: 0
@@ -415,6 +418,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   orientation: {fileID: 6809738768368390287}
+  camera_Component: {fileID: 492565310111534717}
   jump_Key: 32
   upwards_Run_Key: 304
   downwards_Run_Key: 306
@@ -424,6 +428,9 @@ MonoBehaviour:
   wall_Climb_Speed: 2
   max_Wall_Run_Time: 4
   exit_Wall_Time: 0.2
+  camera_Script: {fileID: 1425976961368323652}
+  camera_Tilt_Speed: 0.2
+  camera_Tilt_Duration: 0.7
   wall_Check_Distance: 0.7
   min_Jump_Height: 1
   use_Gravity: 1
@@ -567,15 +574,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2628538805666697519, guid: ab775a228e53b38e88ceac94d8d5a349, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2628538805666697519, guid: ab775a228e53b38e88ceac94d8d5a349, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2628538805666697519, guid: ab775a228e53b38e88ceac94d8d5a349, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2628538805666697519, guid: ab775a228e53b38e88ceac94d8d5a349, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -637,6 +644,7 @@ MonoBehaviour:
   orientation: {fileID: 6809738768368390287}
   sens_X: 100
   sens_Y: 100
+  z_Rotation: 0
 --- !u!114 &1829920414830965900 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2099526867749689996, guid: ab775a228e53b38e88ceac94d8d5a349, type: 3}

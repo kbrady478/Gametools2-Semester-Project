@@ -8,6 +8,7 @@ public class player_Movement : MonoBehaviour
 {
     [Header("General")]
     [SerializeField] private Transform orientation;
+    [SerializeField] private Camera camera;
     private Rigidbody rb;    
     private float horizontal_Input;
     private float vertical_Input;
@@ -126,10 +127,17 @@ public class player_Movement : MonoBehaviour
         horizontal_Input = Input.GetAxisRaw("Horizontal");
         vertical_Input = Input.GetAxisRaw("Vertical");
 
+        // Sprinting
         if (Input.GetKey(sprint_Key))
+        {
+            camera.fieldOfView = 65;
             move_Speed = sprint_Speed;
+        }
         else if (Input.GetKeyUp(sprint_Key))
+        {
+            camera.fieldOfView = 60;
             move_Speed = walk_Speed;
+        }
         
         // Regular Jump
         if (Input.GetKeyDown(jump_Key) && can_Jump && is_Grounded)
