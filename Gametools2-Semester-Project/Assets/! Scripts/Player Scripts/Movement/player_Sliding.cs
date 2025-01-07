@@ -21,6 +21,7 @@ public class player_Sliding : MonoBehaviour
     private float horizontal_Input;
     private float vertical_Input;
     
+    
     #region --- Unity Updates ---
     
     private void Start()
@@ -29,7 +30,8 @@ public class player_Sliding : MonoBehaviour
         movement_Script = GetComponent<player_Movement>();
 
         start_Y_Scale = player_Object.localScale.y;
-    }
+        
+    }// end Start()
 
     private void Update()
     {
@@ -41,15 +43,17 @@ public class player_Sliding : MonoBehaviour
 
         if (Input.GetKeyUp(slide_Key) && movement_Script.is_Sliding)
             Stop_Slide();
-    }
+        
+    }// end Update()
 
     private void FixedUpdate()
     {
         if (movement_Script.is_Sliding)
             Sliding_Movement();
-    }
+    }// end FixedUpdate()
 
     #endregion
+    
     
     private void Start_Slide()
     {
@@ -61,7 +65,7 @@ public class player_Sliding : MonoBehaviour
         rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
 
         slide_Timer = max_Slide_Time;
-    }
+    }// end Start_Slide()
 
     private void Sliding_Movement()
     {
@@ -83,13 +87,15 @@ public class player_Sliding : MonoBehaviour
 
         if (slide_Timer <= 0)
             Stop_Slide();
-    }
+        
+    }// end Sliding_Movement()
 
     private void Stop_Slide()
     {
         movement_Script.is_Sliding = false;
 
         player_Object.localScale = new Vector3(player_Object.localScale.x, start_Y_Scale, player_Object.localScale.z);
-    }
+        
+    }// end Stop_Slide()
     
 }// end player_Sliding

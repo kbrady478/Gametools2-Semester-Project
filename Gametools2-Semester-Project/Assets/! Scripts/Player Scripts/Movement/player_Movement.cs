@@ -33,6 +33,9 @@ public class player_Movement : MonoBehaviour
     [SerializeField] private float jump_Force;
     [SerializeField] private float jump_Cooldown;
     [SerializeField] private float air_Multiplier;
+
+    [Header(("Double Jump"))] 
+    //[SerializeField] private float double_Jump_Cooldown; // Timer between jump and double jump
     
     [Header("Crouching")]
     [SerializeField] private float crouch_Move_Speed;
@@ -58,11 +61,14 @@ public class player_Movement : MonoBehaviour
         crouching,
         sliding,
         in_Air
-    }
+    }// end Movement_State
 
     [Header("State Bools - Do not change")]
     public Movement_State current_State;
     [SerializeField] private bool can_Jump;
+    public bool can_Air_Jump = false;
+    public bool has_Air_Jumped = false;
+    private bool start_Double_Jump_Cooldown;
     public bool is_Grounded;
     public bool is_Crouching;
     public bool is_Sliding;
@@ -75,32 +81,40 @@ public class player_Movement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
-
         can_Jump = true;
-
         start_Y_Scale = transform.localScale.y;
-    }
+    }// end Start()
 
     private void Update()
     {
-        // ground check
+        // Ground check
         is_Grounded = Physics.Raycast(transform.position, Vector3.down, player_Height * 0.5f + 0.2f, ground_Layer);
 
         Player_Input();
         Speed_Control();
         State_Handler();
 
-        // handle drag
+        // Handle drag
         if (is_Grounded)
+        {
+            can_Air_Jump = false;
             rb.linearDamping = ground_Drag;
+        }
+        
         else
+        {
+            if (has_Air_Jumped == false)
+                can_Air_Jump = true;
+                
             rb.linearDamping = 0;
-    }
+        }
+        
+    }// end Update()
 
     private void FixedUpdate()
     {
         Move_Player();
-    }
+    }// end FixedUpdate()
 
     #endregion
     
@@ -111,17 +125,22 @@ public class player_Movement : MonoBehaviour
         horizontal_Input = Input.GetAxisRaw("Horizontal");
         vertical_Input = Input.GetAxisRaw("Vertical");
 
-        // when to jump
-        if (Input.GetKey(jump_Key) && can_Jump && is_Grounded)
+        // Regular Jump
+        if (Input.GetKeyDown(jump_Key) && can_Jump && is_Grounded)
         {
             can_Jump = false;
-
             Jump();
-
             Invoke(nameof(Reset_Jump), jump_Cooldown);
         }
+        // Air Jump
+        else if (Input.GetKeyDown(jump_Key) && can_Air_Jump == true && has_Air_Jumped == false && is_Grounded == false && is_Wall_Running == false)
+        {
+            can_Air_Jump = false;
+            has_Air_Jumped = true;
+            Jump();
+        }
 
-        // start crouch
+        // Start crouch
         if (Input.GetKeyDown(crouch_Key) && horizontal_Input == 0 && vertical_Input == 0)
         {
             transform.localScale = new Vector3(transform.localScale.x, crouch_Y_Scale, transform.localScale.z);
@@ -130,14 +149,14 @@ public class player_Movement : MonoBehaviour
             is_Crouching = true;
         }
 
-        // stop crouch
+        // Stop crouch
         if (Input.GetKeyUp(crouch_Key))
         {
             transform.localScale = new Vector3(transform.localScale.x, start_Y_Scale, transform.localScale.z);
 
             is_Crouching = false;
         }
-    }
+    } // end Player_Input()
 
     private void State_Handler()
     {
@@ -200,7 +219,7 @@ public class player_Movement : MonoBehaviour
         }
 
         last_Target_Move_Speed = target_Move_Speed;
-    }
+    }// end State_Handler()
 
     private IEnumerator Lerp_Move_Speed()
     {
@@ -227,7 +246,7 @@ public class player_Movement : MonoBehaviour
         }
 
         move_Speed = target_Move_Speed;
-    }
+    }// end Lerp_Move_Speed)(
 
     private void Move_Player()
     {
@@ -253,7 +272,7 @@ public class player_Movement : MonoBehaviour
 
         // Turn gravity off while on slope
         if(!is_Wall_Running) rb.useGravity = !On_Slope();
-    }
+    }// end Move_Player()
 
     private void Speed_Control()
     {
@@ -276,7 +295,8 @@ public class player_Movement : MonoBehaviour
                 rb.linearVelocity = new Vector3(limited_Velocity.x, rb.linearVelocity.y, limited_Velocity.z);
             }
         }
-    }
+        
+    }// end Speed_Control()
 
     #endregion
     
@@ -290,13 +310,15 @@ public class player_Movement : MonoBehaviour
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
         rb.AddForce(transform.up * jump_Force, ForceMode.Impulse);
-    }
+    }// end Jump()
+    
     private void Reset_Jump()
     {
         can_Jump = true;
         exiting_Slope = false;
-    }
-
+    }// end Reset_Jump()
+    
+    
     #endregion
     
     #region --- Slope Handling ---
@@ -310,12 +332,12 @@ public class player_Movement : MonoBehaviour
         }
 
         return false;
-    }
+    }// end On_Slope()
 
     public Vector3 Get_Slope_Move_Direction(Vector3 direction)
     {
         return Vector3.ProjectOnPlane(direction, slope_Hit.normal).normalized;
-    }
+    }// end Get_Slope_Move_Direction
 
     #endregion
     

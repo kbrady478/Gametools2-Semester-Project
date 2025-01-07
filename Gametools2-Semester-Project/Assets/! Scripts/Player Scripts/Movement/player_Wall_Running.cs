@@ -55,32 +55,25 @@ public class player_Wall_Running : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         player_Movement_Script = GetComponent<player_Movement>();
-    }
+        
+    }// end Start()
 
     private void Update()
     {
         Check_For_Wall();
         State_Machine();
-    }
+        
+    }// end Update()
 
     private void FixedUpdate()
     {
         if (player_Movement_Script.is_Wall_Running)
             Wall_Running_Movement();
-    }
+        
+    }// end FixedUpdate()
 
     #endregion
     
-    private void Check_For_Wall()
-    {
-        wall_On_Right = Physics.Raycast(transform.position, orientation.right, out right_Wall_Hit, wall_Check_Distance, wall_Layer);
-        wall_On_Left = Physics.Raycast(transform.position, -orientation.right, out left_Wall_Hit, wall_Check_Distance, wall_Layer);
-    }
-
-    private bool Above_Ground()
-    {
-        return !Physics.Raycast(transform.position, Vector3.down, min_Jump_Height, ground_Layer);
-    }
 
     private void State_Machine()
     {
@@ -130,24 +123,24 @@ public class player_Wall_Running : MonoBehaviour
             if (player_Movement_Script.is_Wall_Running)
                 Stop_Wall_Run();
         }
-    }
+        
+    }// end State_Machine()
 
     private void Start_Wall_Run()
     {
         player_Movement_Script.is_Wall_Running = true;
-
         wall_Run_Timer = max_Wall_Run_Time;
-
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         
-    }
+        player_Movement_Script.has_Air_Jumped = false;
+        player_Movement_Script.can_Air_Jump = true;
+        
+    }// end Start_Wall_Run()
 
     private void Wall_Running_Movement()
     {
         rb.useGravity = use_Gravity;
-
         Vector3 wall_Normal = wall_On_Right ? right_Wall_Hit.normal : left_Wall_Hit.normal;
-
         Vector3 wall_Forward = Vector3.Cross(wall_Normal, transform.up);
 
         if ((orientation.forward - wall_Forward).magnitude > (orientation.forward - -wall_Forward).magnitude)
@@ -169,17 +162,17 @@ public class player_Wall_Running : MonoBehaviour
         // Weaken gravity
         if (use_Gravity)
             rb.AddForce(transform.up * gravity_Counter_Force, ForceMode.Force);
-    }
+    }// end Wall_Running_Movement()
 
     private void Stop_Wall_Run()
     {
         player_Movement_Script.is_Wall_Running = false;
         
-    }
+    }// end Stop_Wall_Run()
 
     private void Wall_Jump()
     {
-        // enter exiting wall current_State
+        // Enter exiting wall state
         exiting_Wall = true;
         exit_Wall_Timer = exit_Wall_Time;
 
@@ -187,9 +180,27 @@ public class player_Wall_Running : MonoBehaviour
 
         Vector3 force_To_Apply = transform.up * wall_Jump_Upward_Force + wall_Normal * wall_Jump_Sideway_Force;
 
-        // reset y velocity and add force
+        // Reset y velocity and add force
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         rb.AddForce(force_To_Apply, ForceMode.Impulse);
-    }
+        
+    }// end Wall_Jump()
+    
+    
+    #region --- Detections ---
+    
+    private bool Above_Ground()
+    {
+        return !Physics.Raycast(transform.position, Vector3.down, min_Jump_Height, ground_Layer);
+    }// end Above_Ground()
+    
+    private void Check_For_Wall()
+    {
+        wall_On_Right = Physics.Raycast(transform.position, orientation.right, out right_Wall_Hit, wall_Check_Distance, wall_Layer);
+        wall_On_Left = Physics.Raycast(transform.position, -orientation.right, out left_Wall_Hit, wall_Check_Distance, wall_Layer);
+    }// end Check_For_Wall()
+    
+    #endregion
+    
     
 }// end player_Wall_Running
