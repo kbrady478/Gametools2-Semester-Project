@@ -12,6 +12,7 @@ TagManager:
   - Damage Controller
   - FxTemporaire
   - Kill Counter
+  - TP Point
   layers:
   - Default
   - TransparentFX
@@ -20,10 +21,10 @@ TagManager:
   - Water
   - UI
   - Ground
-  - wallLayer
+  - Wall
   - Enemy
   - ladderLayer
-  - 
+  - Terrain
   - 
   - 
   - Player Layer
