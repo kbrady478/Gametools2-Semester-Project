@@ -145,6 +145,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pause_Menu: {fileID: 0}
+  hp_Bar: {fileID: 0}
+  crosshair: {fileID: 0}
 --- !u!1 &3113712863161701067
 GameObject:
   m_ObjectHideFlags: 0
@@ -236,9 +238,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9e9550944bd1d6b891412a878eaac05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  burst_Rifle_Damage: 20
+  burst_Rifle_Damage: 35
   plasma_Gun_Damage: 50
-  tp_Pistol_Damage: 20
+  tp_Pistol_Damage: 70
   enemy_Burst_Rifle_Damage: 20
 --- !u!1 &7225224833528598568
 GameObject:
