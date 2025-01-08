@@ -8441,7 +8441,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3342398283917692083, guid: 75383647cce337c4cbc08d36cb42d08b, type: 3}
       propertyPath: no_Door
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3342398283917692083, guid: 75383647cce337c4cbc08d36cb42d08b, type: 3}
       propertyPath: final_Door

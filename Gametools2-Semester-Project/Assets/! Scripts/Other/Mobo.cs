@@ -6,7 +6,9 @@ public class Mobo : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        victory_Manager.Victory_Condition_Met();
+        print("interacted");
+        victory_Manager.Next_Scene();
+        //victory_Manager.Victory_Condition_Met();
     }
     
 }
