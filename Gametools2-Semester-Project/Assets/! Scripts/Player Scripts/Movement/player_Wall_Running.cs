@@ -221,13 +221,13 @@ public class player_Wall_Running : MonoBehaviour
         // Tilt camera opposite to the wall
         // Negative angle is towards the right and vice versa
         
-        if (wall_On_Left == true && camera_Tilt_Right_Started == false && tilt_Complete == false)
+        if (wall_On_Left == true)
         {
             camera_Script.z_Rotation = -target_Tilt_Angle;
             //StartCoroutine(nameof(Tilt_Camera_Right));
         }
         
-        if (wall_On_Right == true && camera_Tilt_Left_Started == false && tilt_Complete == false)
+        if (wall_On_Right == true)
         {
             camera_Script.z_Rotation = target_Tilt_Angle;
             //StartCoroutine(nameof(Tilt_Camera_Left));
