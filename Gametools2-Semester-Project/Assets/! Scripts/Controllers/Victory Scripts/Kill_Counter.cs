@@ -20,8 +20,8 @@ public class Kill_Counter : MonoBehaviour
 
     private void Update()
     {
-        print(total_Enemies);
-        print(total_Kills);
+        //print(total_Enemies);
+        //print(total_Kills);
         
         if (total_Kills >= total_Enemies)
         {

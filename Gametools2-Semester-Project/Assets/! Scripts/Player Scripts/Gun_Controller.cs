@@ -12,7 +12,7 @@ public class Gun_Controller : MonoBehaviour
     //[HideInInspector] private int[] current_Weapon_Roster; // array for switching  
     public int current_Weapon_I = 0; // index for current weapon
     
-    public bool can_Fire;
+    public bool can_Fire = true;
     
     
     // not locking items out completely, just not setting equip bool to true
@@ -45,8 +45,6 @@ public class Gun_Controller : MonoBehaviour
 
     public void Change_Weapon()
     {
-
-        
         // Not sure if melee will be equipabble like this or on E key for example
         // Grapple gun is the same case
         

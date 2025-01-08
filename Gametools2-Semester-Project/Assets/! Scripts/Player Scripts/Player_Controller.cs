@@ -35,6 +35,8 @@ public class Player_Controller : MonoBehaviour
     
     private void OnAttack()
     {
+        //print("shoot");
         gun_Control_Script.Shoot();
     }
+    
 }
