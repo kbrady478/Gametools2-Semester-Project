@@ -429,8 +429,8 @@ MonoBehaviour:
   max_Wall_Run_Time: 4
   exit_Wall_Time: 0.2
   camera_Script: {fileID: 1425976961368323652}
-  camera_Tilt_Speed: 0.2
-  camera_Tilt_Duration: 0.7
+  camera_Tilt_Duration: 0.15
+  target_Tilt_Angle: 10
   wall_Check_Distance: 0.7
   min_Jump_Height: 1
   use_Gravity: 1

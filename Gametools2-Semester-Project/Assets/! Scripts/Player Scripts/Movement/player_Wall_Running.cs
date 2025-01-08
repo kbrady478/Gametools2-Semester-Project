@@ -1,6 +1,8 @@
 // Tutorial used: https://www.youtube.com/watch?v=gNt9wBOrQO4
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -39,8 +41,7 @@ public class player_Wall_Running : MonoBehaviour
     
     [Header("Camera Tilt")]
     [SerializeField] private first_Person_Cam camera_Script;
-    [SerializeField] private float camera_Tilt_Speed;
-    [SerializeField] private float camera_Tilt_Duration;
+    [SerializeField] private float target_Tilt_Angle;
     
     [Header("Detection")]
     [SerializeField] private float wall_Check_Distance;
@@ -68,7 +69,9 @@ public class player_Wall_Running : MonoBehaviour
     {
         Check_For_Wall();
         State_Machine();
-        
+
+        if (player_Movement_Script.is_Wall_Running == false)
+            camera_Script.z_Rotation = 0;
     }// end Update()
 
     private void FixedUpdate()
@@ -179,12 +182,26 @@ public class player_Wall_Running : MonoBehaviour
         player_Movement_Script.is_Wall_Running = false;
 
         camera_Component.fieldOfView = 60;
+        /*
+        tilt_Complete = false;
+        
+        StopAllCoroutines();
+        if (last_Camera_Tilt == 1) // Is tilted right
+            StartCoroutine(nameof(Tilt_Camera_Left));
+        if (last_Camera_Tilt == 2)
+            StartCoroutine(nameof(Tilt_Camera_Right)); // Is tilted left
 
+        camera_Tilt_Left_Started = false;
+        camera_Tilt_Right_Started = false;
+        tilt_Complete = false;
+        last_Camera_Tilt = 0;
+        */
         camera_Script.z_Rotation = 0;
     }// end Stop_Wall_Run()
 
     private void Wall_Jump()
     {
+        
         // Enter exiting wall state
         exiting_Wall = true;
         exit_Wall_Timer = exit_Wall_Time;
@@ -198,19 +215,94 @@ public class player_Wall_Running : MonoBehaviour
         rb.AddForce(force_To_Apply, ForceMode.Impulse);
         
     }// end Wall_Jump()
-
+    
     private void Handle_Camera_Tilt()
     {
-        if (wall_On_Left == true)
+        // Tilt camera opposite to the wall
+        // Negative angle is towards the right and vice versa
+        
+        if (wall_On_Left == true && camera_Tilt_Right_Started == false && tilt_Complete == false)
         {
-            camera_Script.z_Rotation = -15;
+            camera_Script.z_Rotation = -target_Tilt_Angle;
+            //StartCoroutine(nameof(Tilt_Camera_Right));
         }
         
-        if (wall_On_Right == true)
+        if (wall_On_Right == true && camera_Tilt_Left_Started == false && tilt_Complete == false)
         {
-            camera_Script.z_Rotation = 15f;
+            camera_Script.z_Rotation = target_Tilt_Angle;
+            //StartCoroutine(nameof(Tilt_Camera_Left));
         }
-    }
+    }// end Handle_Camera_Tilt()
+/*
+    private IEnumerator Tilt_Camera_Right()
+    {
+        print("beginning tilt");
+        camera_Tilt_Right_Started = true;
+        camera_Tilt_Left_Started = false;
+        last_Camera_Tilt = 1;
+        float starting_Angle = camera_Script.z_Rotation;
+        float target_Angle;
+
+        // If the camera is tilted towards the right already, center it
+        if (starting_Angle < 0)
+            target_Angle = 0;
+        // Else go towards the right
+        else
+            target_Angle = -target_Tilt_Angle;
+
+        float time_Elapsed = 0f;
+
+        while (time_Elapsed < camera_Tilt_Duration)
+        {
+            print("tilting");
+            camera_Script.z_Rotation = Mathf.Lerp(starting_Angle, target_Angle, time_Elapsed / camera_Tilt_Duration);
+            time_Elapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        print("tilted");
+        
+        camera_Script.z_Rotation = target_Angle;
+
+        tilt_Complete = true;
+        camera_Tilt_Right_Started = false;
+
+    }// end Tilt_Camera_Negative()
+    
+    private IEnumerator Tilt_Camera_Left()
+    {
+        print("beginning tilt");
+        camera_Tilt_Left_Started = true;
+        camera_Tilt_Right_Started = false;
+        last_Camera_Tilt = 2;
+        float starting_Angle = camera_Script.z_Rotation;
+        float target_Angle;
+
+        // If the camera is tilted towards the left already, center it
+        if (starting_Angle > 0)
+            target_Angle = 0;
+        // Else go towards the right
+        else
+            target_Angle = target_Tilt_Angle;
+
+        float time_Elapsed = 0f;
+
+        while (time_Elapsed < camera_Tilt_Duration)
+        {
+            print("tilting");
+            camera_Script.z_Rotation = Mathf.Lerp(starting_Angle, target_Angle, time_Elapsed / camera_Tilt_Duration);
+            time_Elapsed += Time.deltaTime;
+            yield return null;
+        }
+        print("tilted");
+        
+        camera_Script.z_Rotation = target_Angle;
+
+        tilt_Complete = true;
+        camera_Tilt_Left_Started = false;
+
+    }// end Tilt_Camera_Negative()
+*/
     
     #region --- Detections ---
     
